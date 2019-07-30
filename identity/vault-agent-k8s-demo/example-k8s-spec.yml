@@ -13,14 +13,18 @@ spec:
       emptyDir:
         medium: Memory
 
-    - name: config
+    - name: agent-config
       configMap:
-        name: example-vault-agent-config
+        name: vault-agent-config
         items:
           - key: vault-agent-config.hcl
             path: vault-agent-config.hcl
 
-          - key: consul-template-config.hcl
+    - name: consul-config
+      configMap:
+        name: con-nginx-tpl-config
+        items: 
+          - key: consul-template-config.hcl 
             path: consul-template-config.hcl
 
     - name: shared-data
@@ -32,7 +36,7 @@ spec:
       image: vault
 
       volumeMounts:
-        - name: config
+        - name: agent-config
           mountPath: /etc/vault
         - name: vault-token
           mountPath: /home/vault
@@ -40,7 +44,7 @@ spec:
       # This assumes Vault running on local host and K8s running in Minikube using VirtualBox
       env:
         - name: VAULT_ADDR
-          value: http://vault-server-vault:8200
+          value: http://vault-server-svc:8200
 
       # Run the Vault agent
       args:
@@ -60,7 +64,7 @@ spec:
         - name: vault-token
           mountPath: /home/vault
 
-        - name: config
+        - name: consul-config
           mountPath: /etc/consul-template
 
         - name: shared-data
@@ -71,7 +75,7 @@ spec:
           value: /home/vault
 
         - name: VAULT_ADDR
-          value: http://vault-server-vault:8200
+          value: http://vault-server-svc:8200
 
       # Consul-Template looks in $HOME/.vault-token, $VAULT_TOKEN, or -vault-token (via CLI)
       args:
